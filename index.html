@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+<title>NDA I 2027 — Mission Log</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap');
+
+  :root{
+    --olive: #3D4A2E;
+    --olive-dark: #242B1B;
+    --khaki: #B8AD8C;
+    --brass: #B8863B;
+    --cream: #EDE8DC;
+    --red: #8C3B2E;
+  }
+
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--olive-dark);
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    padding-bottom: 40px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .nda-display{ font-family: 'Oswald', sans-serif; }
+  .nda-body{ font-family: 'Source Sans 3', sans-serif; }
+  .check-box{ transition: all 0.15s ease; }
+  .check-box:active{ transform: scale(0.92); }
+  .week-card{ transition: box-shadow 0.2s ease; }
+  svg{ display:block; }
+
+  /* header */
+  .head{
+    background: var(--olive);
+    border-bottom: 3px solid var(--brass);
+    padding: 28px 20px 22px;
+  }
+  .eyebrow{
+    color: var(--brass); font-size: 12px; letter-spacing: 0.25em; font-weight: 600; margin-bottom: 6px;
+  }
+  .title{
+    color: var(--cream); font-size: 28px; font-weight: 700; letter-spacing: 0.02em; line-height: 1.1;
+  }
+  .subtitle{ color: var(--khaki); font-size: 13px; margin-top: 4px; }
+
+  .stats-row{ display:flex; gap:12px; margin-top:20px; }
+  .stat-box{
+    flex:1; background: var(--olive-dark); border-radius:6px; padding: 12px 14px;
+    border: 1px solid rgba(184,173,140,0.2);
+  }
+  .stat-label{ display:flex; align-items:center; gap:6px; color: var(--brass); margin-bottom:4px; }
+  .stat-label span{ font-size:11px; letter-spacing:0.08em; text-transform: uppercase; }
+  .stat-val{ color: var(--cream); font-size:22px; font-weight:700; }
+
+  /* weeks */
+  .weeks{ padding: 16px 14px 0; }
+  .week-card{
+    background: var(--olive); border-radius: 8px; margin-bottom: 10px; overflow: hidden;
+    border: 1px solid rgba(184,173,140,0.13);
+  }
+  .week-card.complete{ border-color: var(--brass); }
+
+  .week-head{
+    width:100%; background:none; border:none; padding: 14px 16px;
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer; text-align:left;
+    color: inherit;
+  }
+  .week-head-left{ display:flex; align-items:center; gap:12px; }
+  .week-num{
+    width:34px; height:34px; border-radius:5px; background: var(--olive-dark); color: var(--khaki);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0;
+  }
+  .week-card.complete .week-num{ background: var(--brass); color: var(--olive-dark); }
+  .week-title{ color: var(--cream); font-size:14px; font-weight:600; }
+  .week-range{ color: var(--khaki); font-size:12px; }
+  .week-head-right{ display:flex; align-items:center; gap:10px; }
+  .week-frac{ color: var(--brass); font-size:12px; font-weight:600; }
+
+  .week-body{ padding: 0 16px 16px; }
+  .prog-bar{ height:3px; background: var(--olive-dark); border-radius:2px; margin-bottom:14px; overflow:hidden; }
+  .prog-fill{ height:100%; background: var(--brass); transition: width .3s ease; }
+
+  .subject{ margin-bottom:12px; }
+  .subject-label{ color: var(--khaki); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; }
+  .subject-topic{ color: var(--cream); font-size:13px; margin-bottom:8px; line-height:1.4; }
+  .days{ display:flex; gap:6px; }
+  .day-btn{
+    flex:1; height:34px; border-radius:5px; border: 1px solid rgba(184,173,140,0.27);
+    background: transparent; display:flex; align-items:center; justify-content:center; cursor:pointer;
+    color: var(--khaki); font-size:11px; font-family:'Source Sans 3', sans-serif;
+  }
+  .day-btn.checked{ background: var(--brass); border-color: var(--brass); }
+
+  .notes-block{ margin-top:10px; }
+  .notes-head{ display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .notes-head span{ color: var(--khaki); font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+  textarea{
+    width:100%; background: var(--olive-dark); border: 1px solid rgba(184,173,140,0.2); border-radius:5px;
+    color: var(--cream); font-size:13px; padding: 8px 10px; font-family:'Source Sans 3', sans-serif;
+    resize:none; box-sizing:border-box;
+  }
+  textarea:focus{ outline: 1px solid var(--brass); }
+
+  .save-state{ text-align:center; padding: 10px 0 4px; color: rgba(184,173,140,0.53); font-size:11px; }
+</style>
+</head>
+<body>
+
+<div class="head">
+  <div class="nda-display eyebrow">NDA I 2027 — MISSION LOG</div>
+  <div class="nda-display title">Daily Study Tracker</div>
+  <div class="nda-body subtitle">Exam: 14 April 2027 · Syllabus target: 28 Feb 2027</div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span class="nda-body">Overall</span>
+      </div>
+      <div class="nda-display stat-val" id="overallPct">0%</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        <span class="nda-body">Streak</span>
+      </div>
+      <div class="nda-display stat-val" id="streakVal">0d</div>
+    </div>
+  </div>
+</div>
+
+<div class="weeks" id="weeks"></div>
+
+<div class="save-state" id="saveState"></div>
+
+<script>
+const SUBJECTS = [
+  { key: "maths", label: "Mathematics" },
+  { key: "english", label: "English" },
+  { key: "gk", label: "General Knowledge" },
+];
+
+const WEEKS = [
+  { n: 1, range: "Aug 21 – Aug 27", maths: "Sets, relations, complex numbers, binary system", english: "Grammar basics (tenses, parts of speech, articles)", gk: "Physics: matter, density, Archimedes, pressure" },
+  { n: 2, range: "Aug 28 – Sep 3", maths: "Progressions (AP/GP/HP)", english: "Grammar: voice, narration", gk: "Physics: Newton's laws, momentum, work-power-energy" },
+  { n: 3, range: "Sep 4 – Sep 10", maths: "Quadratic equations, linear inequations", english: "Vocabulary building", gk: "Physics: forces, equilibrium, gravitation, machines" },
+  { n: 4, range: "Sep 11 – Sep 17", maths: "Permutation, Combination, Binomial theorem, Logarithms", english: "Synonyms / Antonyms", gk: "Physics: sound, light, mirrors/lenses, human eye" },
+  { n: 5, range: "Sep 18 – Sep 24", maths: "Matrices: types, operations", english: "Comprehension passages", gk: "Physics: heat, temperature, conduction/convection/radiation" },
+  { n: 6, range: "Sep 25 – Oct 1", maths: "Determinants, adjoint, inverse", english: "Sentence improvement", gk: "Physics: magnetism, electricity, Ohm's law" },
+  { n: 7, range: "Oct 2 – Oct 8", maths: "Cramer's rule, Matrix method", english: "Idioms & phrases (set 1)", gk: "Chemistry: changes, elements, valency" },
+  { n: 8, range: "Oct 9 – Oct 15", maths: "Trigonometry: ratios, identities", english: "Idioms & phrases (set 2)", gk: "Chemistry: chemical combination laws, air & water" },
+  { n: 9, range: "Oct 16 – Oct 22", maths: "Trig: sum/difference, multiple angles", english: "Ordering of words in a sentence", gk: "Chemistry: acids, bases, salts, carbon forms" },
+  { n: 10, range: "Oct 23 – Oct 29", maths: "Inverse trig, heights & distances", english: "Selecting words (fill in blanks)", gk: "Chemistry: atomic structure, valency, molecular weight" },
+  { n: 11, range: "Oct 30 – Nov 5", maths: "Analytical Geometry 2D: coordinates, lines", english: "Mixed grammar + vocab revision", gk: "History: ancient/medieval India overview" },
+  { n: 12, range: "Nov 6 – Nov 12", maths: "2D: circle, parabola/ellipse/hyperbola", english: "Comprehension practice", gk: "History: freedom movement (early phase)" },
+  { n: 13, range: "Nov 13 – Nov 19", maths: "3D: distance, direction cosines/ratios", english: "Grammar revision + error spotting", gk: "History: freedom movement (Gandhi era–Independence)" },
+  { n: 14, range: "Nov 20 – Nov 26", maths: "3D: equation of plane/line, angles", english: "Vocabulary set 2", gk: "History: Constitution & administration basics" },
+  { n: 15, range: "Nov 27 – Dec 3", maths: "Differential Calculus: functions, limits, continuity", english: "Idioms set 3", gk: "History: Five Year Plans, Panchayati Raj, Bhoodan" },
+  { n: 16, range: "Dec 4 – Dec 10", maths: "Derivatives: sum/product/quotient rule", english: "Comprehension + sentence improvement", gk: "History: Modern world (Renaissance–Industrial Rev.)" },
+  { n: 17, range: "Dec 11 – Dec 17", maths: "Composite function derivatives, 2nd order derivatives", english: "Grammar + vocab combined revision", gk: "History: World Wars, UN, Non-Alignment, ideologies" },
+  { n: 18, range: "Dec 18 – Dec 24", maths: "Increasing/decreasing functions, maxima-minima", english: "Idioms set 4", gk: "Geography: Earth, lat/long, time, IDL" },
+  { n: 19, range: "Dec 25 – Dec 31", maths: "Integral Calculus: integration methods", english: "Comprehension practice", gk: "Geography: earth movements, rocks, weathering, earthquakes" },
+  { n: 20, range: "Jan 1 – Jan 7", maths: "Definite integrals, area under curves", english: "Sentence improvement", gk: "Geography: oceans, atmosphere, winds, rainfall" },
+  { n: 21, range: "Jan 8 – Jan 14", maths: "Differential Equations: order, degree, formation", english: "Full mock: English paper", gk: "Geography: world regions, India regional geography" },
+  { n: 22, range: "Jan 15 – Jan 21", maths: "Diff. Eq: solving first order/degree", english: "Vocabulary final revision", gk: "General Science: cells, tissues, growth/reproduction" },
+  { n: 23, range: "Jan 22 – Jan 28", maths: "Vector Algebra: basics, dot product", english: "Idioms final revision", gk: "Gen. Science: human body, diseases, nutrition, solar system" },
+  { n: 24, range: "Jan 29 – Feb 4", maths: "Vector Algebra: cross product, applications", english: "Grammar weak-area fixing", gk: "Current Events: India/world affairs + defence updates" },
+  { n: 25, range: "Feb 5 – Feb 11", maths: "Statistics: frequency distribution, central tendency", english: "Mixed practice test", gk: "Current Events: personalities, awards, sports" },
+  { n: 26, range: "Feb 12 – Feb 18", maths: "Variance, standard deviation", english: "Mixed practice test", gk: "Weak-topic revision (self-identified)" },
+  { n: 27, range: "Feb 19 – Feb 25", maths: "Probability, Bayes' theorem, Binomial distribution", english: "Mixed practice test", gk: "Full GK revision sweep" },
+];
+
+const DAY_COUNT = 6;
+const STORE_KEY = "nda-tracker-data";
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : { checks: {}, notes: {} };
+  }catch(e){ return { checks: {}, notes: {} }; }
+}
+function saveData(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state.data));
+    document.getElementById("saveState").textContent = "progress saved";
+  }catch(e){
+    document.getElementById("saveState").textContent = "save failed";
+  }
+}
+
+const state = {
+  data: loadData(),
+  openWeek: 1,
+};
+
+function weekProgress(n){
+  let done = 0;
+  const total = DAY_COUNT * SUBJECTS.length;
+  for(let d=1; d<=DAY_COUNT; d++){
+    for(const s of SUBJECTS){
+      if(state.data.checks[`w${n}-d${d}-${s.key}`]) done++;
+    }
+  }
+  return { done, total, pct: Math.round((done/total)*100) };
+}
+
+function overall(){
+  let done = 0;
+  const total = WEEKS.length * DAY_COUNT * SUBJECTS.length;
+  WEEKS.forEach(w => { done += weekProgress(w.n).done; });
+  return { done, total, pct: total ? Math.round((done/total)*100) : 0 };
+}
+
+function currentStreak(){
+  let streak = 0;
+  outer: for(let wi = WEEKS.length - 1; wi >= 0; wi--){
+    const w = WEEKS[wi].n;
+    for(let d = DAY_COUNT; d >= 1; d--){
+      const complete = SUBJECTS.every(s => state.data.checks[`w${w}-d${d}-${s.key}`]);
+      const anyChecked = SUBJECTS.some(s => state.data.checks[`w${w}-d${d}-${s.key}`]);
+      if(complete){ streak++; }
+      else if(anyChecked){ break outer; }
+    }
+  }
+  return streak;
+}
+
+function toggle(weekN, day, subjectKey){
+  const id = `w${weekN}-d${day}-${subjectKey}`;
+  state.data.checks[id] = !state.data.checks[id];
+  saveData();
+  render();
+}
+
+function setNote(weekN, text){
+  state.data.notes[weekN] = text;
+  saveData();
+}
+
+function setOpen(n){
+  state.openWeek = (state.openWeek === n) ? null : n;
+  render();
+}
+
+const CHEVRON_DOWN = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`;
+const CHEVRON_UP = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>`;
+const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#242B1B" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+const NOTE_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B8863B" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+
+function render(){
+  const ov = overall();
+  const streak = currentStreak();
+  document.getElementById("overallPct").textContent = ov.pct + "%";
+  document.getElementById("streakVal").textContent = streak + "d";
+
+  const container = document.getElementById("weeks");
+  container.innerHTML = "";
+
+  WEEKS.forEach(w => {
+    const prog = weekProgress(w.n);
+    const isOpen = state.openWeek === w.n;
+
+    const card = document.createElement("div");
+    card.className = "week-card" + (prog.pct === 100 ? " complete" : "");
+
+    const head = document.createElement("button");
+    head.className = "week-head";
+    head.innerHTML = `
+      <div class="week-head-left">
+        <div class="nda-display week-num">${w.n}</div>
+        <div>
+          <div class="nda-body week-title">Week ${w.n}</div>
+          <div class="nda-body week-range">${w.range}</div>
+        </div>
+      </div>
+      <div class="week-head-right">
+        <span class="nda-body week-frac">${prog.done}/${prog.total}</span>
+        ${isOpen ? CHEVRON_UP : CHEVRON_DOWN}
+      </div>
+    `;
+    head.onclick = () => setOpen(w.n);
+    card.appendChild(head);
+
+    if(isOpen){
+      const body = document.createElement("div");
+      body.className = "week-body";
+
+      const bar = document.createElement("div");
+      bar.className = "prog-bar";
+      bar.innerHTML = `<div class="prog-fill" style="width:${prog.pct}%"></div>`;
+      body.appendChild(bar);
+
+      SUBJECTS.forEach(s => {
+        const subj = document.createElement("div");
+        subj.className = "subject";
+        const daysHtml = Array.from({length: DAY_COUNT}).map((_, i) => {
+          const day = i + 1;
+          const id = `w${w.n}-d${day}-${s.key}`;
+          const checked = !!state.data.checks[id];
+          return `<button class="day-btn${checked ? " checked" : ""}" data-week="${w.n}" data-day="${day}" data-subj="${s.key}">${checked ? CHECK_ICON : day}</button>`;
+        }).join("");
+        subj.innerHTML = `
+          <div class="nda-body subject-label">${s.label}</div>
+          <div class="nda-body subject-topic">${w[s.key]}</div>
+          <div class="days">${daysHtml}</div>
+        `;
+        body.appendChild(subj);
+      });
+
+      const notesBlock = document.createElement("div");
+      notesBlock.className = "notes-block";
+      notesBlock.innerHTML = `
+        <div class="notes-head">${NOTE_ICON}<span class="nda-body">Weak points this week</span></div>
+        <textarea rows="2" placeholder="Kya carry-forward karna hai next week...">${state.data.notes[w.n] || ""}</textarea>
+      `;
+      body.appendChild(notesBlock);
+
+      card.appendChild(body);
+    }
+
+    container.appendChild(card);
+  });
+
+  container.querySelectorAll(".day-btn").forEach(btn => {
+    btn.onclick = () => toggle(Number(btn.dataset.week), Number(btn.dataset.day), btn.dataset.subj);
+  });
+  container.querySelectorAll("textarea").forEach(ta => {
+    ta.oninput = (e) => setNote(state.openWeek, e.target.value);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
